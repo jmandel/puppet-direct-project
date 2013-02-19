@@ -1,3 +1,12 @@
 {
-  "direct_domain_name": "direct-puppet.smartplatforms.org"
+  "direct_domain_name": "direct-puppet.smartplatforms.org",
+  "postmaster": "postmaster@direct-puppet.smartplatforms.org",
+  "email_users": {
+    "alice": {
+      "password": "aliceSecret"
+    },
+    "bob": {
+      "password": "bobSecret"
+    }
+  }
 } 

@@ -2,9 +2,11 @@ class direct {
 
     $direct_domain_name = hiera('direct_domain_name')
     $java_home = '/usr/lib/jvm/java-7-openjdk-amd64'
+    $postmaster = hiera('postmaster')
+    $email_users = hiera("email_users")
 
     package {
-        ["ant", "unzip", "openjdk-7-jdk", "nmap"]:
+        ["ant", "unzip", "openjdk-7-jdk", "nmap", "python-pip", "netcat"]:
         ensure => latest
     }
 
@@ -16,12 +18,12 @@ class direct {
 
     ufw::allow { "allow-dns-from-all-tcp":
       port => 53,
-      proto: "tcp"
+      proto => "tcp"
     }
 
     ufw::allow { "allow-dns-from-all-udp":
       port => 53,
-      proto: "udp"
+      proto => "udp"
     }
 
     ufw::allow { "allow-smtp-from-all":
@@ -34,12 +36,6 @@ class direct {
 
     ufw::allow { "allow-ssmtp-from-all":
       port => 465,
-    }
-
-    notify {"set up basics; now ready to copy $java_home/jre/lib/ext/sunjce_provider.jar":
-	require => [
-	    Ufw::Allow["allow-ssmtp-from-all"]
-	]
     }
 
     file { "$java_home/jre/lib/security/US_export_policy.jar":
@@ -74,6 +70,11 @@ class direct {
 		Service["direct-james"]
 	]
     }
+
+    exec {"pip install suds": 
+	unless => "pip freeze | grep suds=="
+    }
+
 
     exec {"generate james-ssl-key":
 	require => Exec["extract direct-bare-metal"],
@@ -153,17 +154,6 @@ class direct {
 	]
     }
 
-    service {"direct-james":
-	ensure=> running,
-	enable=> true,
-	require => [
-		File["/etc/init/direct-james.conf"],
-		File["/opt/direct/james-2.3.2/apps/james/SAR-INF/config.xml"],
-		File["/opt/direct/james-2.3.2/apps/james/SAR-INF/environment.xml"],
-		File["/opt/direct/james-2.3.2/apps/james/SAR-INF/assembly.xml"],
-	]
-    }
-
     service {"direct-tomcat":
 	ensure=> running,
 	enable=> true,
@@ -173,4 +163,94 @@ class direct {
 	]
     }
 
+    file {"/tmp/puppet":
+	ensure => directory,
+	mode => "0744"
+    }
+
+    file {"/tmp/puppet/wait_for_tomcat.sh":
+	ensure => file,
+	source => "puppet:///modules/direct/wait_for_tomcat.sh",
+	mode => "0744",
+	require => File["/tmp/puppet"]
+    }
+
+    exec {"wait-for-tomcat":
+	cwd => "/tmp/puppet",
+	command => "sh wait_for_tomcat.sh",
+	require => [
+		Service["direct-tomcat"],
+		File["/tmp/puppet/wait_for_tomcat.sh"]
+	],
+	timeout => 600
+    }
+
+    file {"/tmp/puppet/config_client_py":
+	ensure => directory,
+	recurse => true,
+	source => "puppet:///modules/direct/config_client_py",
+	mode => "0755",
+	require => File["/tmp/puppet"]
+    }
+
+    file {"/tmp/puppet/config_client_py/add_domain.py":
+	ensure => file,
+	require => File["/tmp/puppet/config_client_py"],
+	content => template("direct/add_domain.py.erb"),
+    }
+
+    exec {"add-domain":
+	cwd => "/tmp/puppet/config_client_py",
+	command => "python add_domain.py",
+	require => [
+		Exec["pip install suds"],	
+		Exec["wait-for-tomcat"],
+		File["/tmp/puppet/config_client_py/add_domain.py"]
+	]
+    }
+
+    service {"direct-james":
+	ensure=> running,
+	enable=> true,
+	require => [
+		File["/etc/init/direct-james.conf"],
+		File["/opt/direct/james-2.3.2/apps/james/SAR-INF/config.xml"],
+		File["/opt/direct/james-2.3.2/apps/james/SAR-INF/environment.xml"],
+		File["/opt/direct/james-2.3.2/apps/james/SAR-INF/assembly.xml"],
+		Exec["add-domain"]
+	]
+    }
+
+    exec {"wait-for-james":
+	command => "nc -z localhost 4555",
+	tries => 30,
+	try_sleep => 5,
+	timeout => 1,
+	require => [
+		Service["direct-james"],
+	]
+    }
+
+
+    file {"/tmp/puppet/add_email_user.expect":
+	ensure => file,
+	source => "puppet:///modules/direct/add_email_user.expect",
+	require => File["/tmp/puppet"]
+    }
+ 
+    create_resources(email_user, $email_users)
+
 }
+
+define email_user($password) {
+  
+    exec {"add-user-$title":
+	cwd => "/tmp/puppet",
+	command => "expect add_email_user.expect $title $password",
+	require => [
+		Exec["wait-for-james"],
+		File["/tmp/puppet/add_email_user.expect"]
+	]
+    }
+}
+
