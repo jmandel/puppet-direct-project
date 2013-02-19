@@ -1,6 +1,7 @@
 class direct {
 
     $direct_domain_name = hiera('direct_domain_name')
+    $java_home = '/usr/lib/jvm/java-7-openjdk-amd64'
 
     package {
         ["ant", "unzip", "openjdk-7-jdk", "nmap"]:
