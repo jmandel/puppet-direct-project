@@ -14,8 +14,14 @@ class direct {
       port => 22,
     }
 
-    ufw::allow { "allow-dns-from-all":
+    ufw::allow { "allow-dns-from-all-tcp":
       port => 53,
+      proto: "tcp"
+    }
+
+    ufw::allow { "allow-dns-from-all-udp":
+      port => 53,
+      proto: "udp"
     }
 
     ufw::allow { "allow-smtp-from-all":
