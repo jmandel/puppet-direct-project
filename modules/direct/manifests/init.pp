@@ -101,11 +101,6 @@ class direct(
 	]
     }
 
-    exec {"pip install suds": 
-	unless => "pip freeze | grep suds=="
-    }
-
-
     exec {"generate james-ssl-key":
 	require => Exec["extract direct-bare-metal"],
 	cwd => "/opt/direct/james-2.3.2/apps/james/conf/",
@@ -295,8 +290,9 @@ class certificate(
 	content => template("direct/certificates/sign-config.erb"),
     }
 
-    exec {"sh gencert.sh":
+    exec {"gen-cert":
 	cwd => "/tmp/puppet",
+	command => "sh gencert.sh",
 	require => [
 		File["/tmp/puppet/req-config"],
 		File["/tmp/puppet/sign-config"],
@@ -311,10 +307,10 @@ class certificate(
     }
 
     exec {"add-cert":
-	command: "python add_certificate.py /tmp/certificate.er",
-	cwd => "/tmp/puppet",
+	command => "python add_certificate.py /tmp/puppet/certificate.der",
+	cwd => "/tmp/puppet/config_client_py",
 	require => [
-	    Exec["sh gencert.sh"],
+	    Exec["gen-cert"],
 	    File["/tmp/puppet/config_client_py/add_certificate.py"]
 	]
     }

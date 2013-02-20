@@ -7,8 +7,14 @@
         dirstring_type = nobmp
 
         [ req_distinguished_name ]
-	countryName                    = <%= @certificate.country %> 
-        localityName                   = <%= @certificate.city %> 
-        organizationalUnitName         = <%= @certificate.organization %> 
+	<% if @certificate['country'] %>
+	countryName                    = <%= @certificate['country'] %> 
+	<% end %>
+	<% if @certificate['city'] %>
+        localityName                   = <%= @certificate['city'] %> 
+	<% end %>
+	<% if @certificate['organization'] %>
+        organizationalUnitName         = <%= @certificate['organization'] %> 
+	<% end %>
         commonName                     = <%= @direct_domain_name %> 
         emailAddress                   = <%= @direct_domain_name %> 

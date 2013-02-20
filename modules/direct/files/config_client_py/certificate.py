@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Certificate(object):
 
-    def __init__(self, der_location, domain, vali):
+    def __init__(self, der_location):
         self.cert = crypto.load_certificate(
                    crypto.FILETYPE_ASN1, 
                    open(der_location).read())
@@ -24,17 +24,17 @@ class Certificate(object):
         c.owner = self.get_cn()
         c.validEndDate = self.get_not_after() 
         c.validStartDate = self.get_not_before() 
-        d.status.value = "ENABLED"
+        c.status.value = "ENABLED"
         c.privateKey = False
-        client.service.addCertificate(c)
+        client.service.addCertificates(c)
 
 def parse_date(d):
     return datetime.strptime(d[:14], "%Y%m%d%H%M%S")
 
-def get_dn_part(part, name):
+def get_dn_part(cert, part):
     return [ 
        x[1] 
-       for x in self.cert.get_issuer().get_components() 
+       for x in cert.get_issuer().get_components() 
        if x[0]==part
     ][0]
 
