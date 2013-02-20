@@ -14,10 +14,10 @@ openssl  x509 \
 
 
 # Make a PKCS12 file from domain cert + key
-
 cat rsa-key.pem certificate.pem | \
     openssl pkcs12 -export \
     -out cert-with-key-package.p12 \
     -passout pass:""
 
-
+# Make DER of Certificate
+openssl x509 -in certificate.pem -outform der -out certificate.der

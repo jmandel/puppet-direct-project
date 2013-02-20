@@ -1,7 +1,14 @@
 class direct_pre($java_home=hiera('java_home')) {
 
     package {
-        ["ant", "unzip", "openjdk-7-jdk", "nmap", "python-pip", "netcat"]:
+        ["ant",
+	 "unzip", 
+	 "openjdk-7-jdk",
+	 "nmap", 
+	 "python-pip",
+	 "netcat",
+	 "openssl",
+	 "libssl-dev"]:
         ensure => latest
     }
 
@@ -9,6 +16,10 @@ class direct_pre($java_home=hiera('java_home')) {
 
     exec {"pip install suds": 
 	unless => "pip freeze | grep suds=="
+    }
+
+    exec {"pip install pyopenssl": 
+	unless => "pip freeze | grep pyopenssl=="
     }
 
     ufw::allow { "allow-ssh-from-all":
@@ -35,6 +46,11 @@ class direct_pre($java_home=hiera('java_home')) {
 
     ufw::allow { "allow-ssmtp-from-all":
       port => 465,
+    }
+
+    file {"/tmp/puppet":
+	ensure => directory,
+	mode => "0744"
     }
 
     file { "$java_home/jre/lib/security/US_export_policy.jar":
@@ -68,8 +84,11 @@ class direct(
   $java_home=hiera('java_home')) {
 
     class{'direct_pre':}
+    class{'certificate':}
+    create_resources(email_user, $email_users)
 
     Class['direct_pre'] -> Class['direct']
+    Class['direct'] -> Class['certificate']
 
 
     exec {"extract direct-bare-metal":
@@ -173,16 +192,11 @@ class direct(
 	]
     }
 
-    file {"/tmp/puppet":
-	ensure => directory,
-	mode => "0744"
-    }
 
     file {"/tmp/puppet/wait_for_tomcat.sh":
 	ensure => file,
 	source => "puppet:///modules/direct/wait_for_tomcat.sh",
-	mode => "0744",
-	require => File["/tmp/puppet"]
+	mode => "0744"
     }
 
     exec {"wait-for-tomcat":
@@ -200,7 +214,6 @@ class direct(
 	recurse => true,
 	source => "puppet:///modules/direct/config_client_py",
 	mode => "0755",
-	require => File["/tmp/puppet"]
     }
 
     file {"/tmp/puppet/config_client_py/add_domain.py":
@@ -245,10 +258,8 @@ class direct(
     file {"/tmp/puppet/add_email_user.expect":
 	ensure => file,
 	source => "puppet:///modules/direct/add_email_user.expect",
-	require => File["/tmp/puppet"]
     }
  
-    create_resources(email_user, $email_users)
 
 }
 
@@ -260,6 +271,51 @@ define email_user($password) {
 	require => [
 		Exec["wait-for-james"],
 		File["/tmp/puppet/add_email_user.expect"]
+	]
+    }
+}
+
+class certificate(
+  $certificate=hiera("certificate"),
+  $direct_domain_name=hiera('direct_domain_name'),
+) {
+
+    file {"/tmp/puppet/gencert.sh":
+	ensure => file,
+	source => "puppet:///modules/direct/gencert.sh",
+    }
+
+    file {"/tmp/puppet/req-config":
+	ensure => file,
+	content => template("direct/certificates/req-config.erb"),
+    }
+
+    file {"/tmp/puppet/sign-config":
+	ensure => file,
+	content => template("direct/certificates/sign-config.erb"),
+    }
+
+    exec {"sh gencert.sh":
+	cwd => "/tmp/puppet",
+	require => [
+		File["/tmp/puppet/req-config"],
+		File["/tmp/puppet/sign-config"],
+		File["/tmp/puppet/gencert.sh"],
+	]
+    }
+
+    file {"/tmp/puppet/config_client_py/add_certificate.py":
+	ensure => file,
+	require => File["/tmp/puppet/config_client_py"],
+	content => template("direct/add_certificate.py.erb"),
+    }
+
+    exec {"add-cert":
+	command: "python add_certificate.py /tmp/certificate.er",
+	cwd => "/tmp/puppet",
+	require => [
+	    Exec["sh gencert.sh"],
+	    File["/tmp/puppet/config_client_py/add_certificate.py"]
 	]
     }
 }

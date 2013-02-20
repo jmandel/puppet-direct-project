@@ -7,8 +7,8 @@
         dirstring_type = nobmp
 
         [ req_distinguished_name ]
-        countryName                    = US 
-        localityName                   = Locality Name (eg, city)
-        organizationalUnitName         = Organizational Unit Name (eg, section)
-        commonName                     = Common Name (eg, YOUR name)
-        emailAddress                   = Email Address
+	countryName                    = <%= @certificate.country %> 
+        localityName                   = <%= @certificate.city %> 
+        organizationalUnitName         = <%= @certificate.organization %> 
+        commonName                     = <%= @direct_domain_name %> 
+        emailAddress                   = <%= @direct_domain_name %> 
