@@ -1,9 +1,4 @@
-class direct {
-
-    $direct_domain_name = hiera('direct_domain_name')
-    $java_home = '/usr/lib/jvm/java-7-openjdk-amd64'
-    $postmaster = hiera('postmaster')
-    $email_users = hiera("email_users")
+class direct_pre($java_home=hiera('java_home')) {
 
     package {
         ["ant", "unzip", "openjdk-7-jdk", "nmap", "python-pip", "netcat"]:
@@ -11,6 +6,10 @@ class direct {
     }
 
     include ufw
+
+    exec {"pip install suds": 
+	unless => "pip freeze | grep suds=="
+    }
 
     ufw::allow { "allow-ssh-from-all":
       port => 22,
@@ -59,9 +58,21 @@ class direct {
 	source => "https://oss.sonatype.org/content/repositories/snapshots/org/nhind/direct-project-stock/2.1-SNAPSHOT/direct-project-stock-2.1-SNAPSHOT.tar.gz",
 	destination => "/tmp/direct-stock.tgz"
     }
+}
+
+
+class direct(
+  $direct_domain_name=hiera('direct_domain_name'),
+  $email_users=hiera('email_users'), 
+  $postmaster=hiera('postmaster'), 
+  $java_home=hiera('java_home')) {
+
+    class{'direct_pre':}
+
+    Class['direct_pre'] -> Class['direct']
+
 
     exec {"extract direct-bare-metal":
-	require => Wget::Fetch["get direct-bare-metal"],
 	cwd => "/opt",
 	command => "tar -xzvf /tmp/direct-stock.tgz",
 	notify => [
@@ -83,11 +94,10 @@ class direct {
 	command => "keytool  -genkey  -alias james -keyalg RSA -keystore keystore -storepass direct  -keypass direct -dname 'CN=James Server SSL'"
     }
 
-    # http://projects.puppetlabs.com/issues/7680 -- can't copy symlink from $java_home :-(
+    # http://projects.puppetlabs.com/issues/7680 -- can't copy symlink from java_home :-(
     file {"/opt/direct/james-2.3.2/lib/sunjce_provider.jar":
 	require => [
-		Exec["extract direct-bare-metal"],
-		Package["openjdk-7-jdk"]
+		Exec["extract direct-bare-metal"]
 	],
 	ensure => file,
 	links => follow,
