@@ -1,7 +1,7 @@
 from suds.client import Client
-from domain import Domain
+from trust_bundle import TrustBundle
+import sys
 
 client = Client("http://localhost:8081/config-service/ConfigurationService?wsdl")
-
-d = Domain("<%= @direct_domain_name %>", "<%= @postmaster %>")
-d.add_to_config(client)
+tb = TrustBundle(*sys.argv[1:])
+tb.add_to_config(client)

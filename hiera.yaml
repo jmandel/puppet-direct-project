@@ -4,6 +4,7 @@
 
 :hierarchy:
   - common
+  - base
 
 :json:
   :datadir:
