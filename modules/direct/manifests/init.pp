@@ -22,6 +22,10 @@ class direct_pre($java_home=hiera('java_home')) {
 	unless => "pip freeze | grep pyopenssl=="
     }
 
+    exec {"pip install dnspython": 
+	unless => "pip freeze | grep dnspython=="
+    }
+
     ufw::allow { "allow-ssh-from-all":
       port => 22,
     }
@@ -300,19 +304,22 @@ class certificate(
 	]
     }
 
-    file {"/tmp/puppet/config_client_py/add_certificate.py":
-	ensure => file,
-	require => File["/tmp/puppet/config_client_py"],
-	content => template("direct/add_certificate.py.erb"),
-    }
-
     exec {"add-cert":
 	command => "python add_certificate.py /tmp/puppet/certificate.der",
 	cwd => "/tmp/puppet/config_client_py",
-	require => [
-	    Exec["gen-cert"],
-	    File["/tmp/puppet/config_client_py/add_certificate.py"]
-	]
+	require => Exec["gen-cert"]
+    }
+
+    exec {"add-dns-mx":
+	command => "python add_dns.py MX $direct_domain_name $ipaddress ",
+	cwd => "/tmp/puppet/config_client_py",
+	require => File["/tmp/puppet/config_client_py"]
+    }
+
+    exec {"add-dns-a":
+	command => "python add_dns.py A $direct_domain_name $ipaddress ",
+	cwd => "/tmp/puppet/config_client_py",
+	require => File["/tmp/puppet/config_client_py"]
     }
 }
 
