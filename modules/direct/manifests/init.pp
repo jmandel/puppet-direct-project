@@ -84,12 +84,14 @@ class direct_pre($java_home=hiera('java_home')) {
 class direct(
   $direct_domain_name=hiera('direct_domain_name'),
   $email_users=hiera('email_users'), 
+  $trust_bundles=hiera('trust_bundles'),
   $postmaster=hiera('postmaster'), 
   $java_home=hiera('java_home')) {
 
     class{'direct_pre':}
     class{'certificate':}
     create_resources(email_user, $email_users)
+    create_resources(trust_bundle, $trust_bundles)
 
     Class['direct_pre'] -> Class['direct']
     Class['direct'] -> Class['certificate']
@@ -215,19 +217,12 @@ class direct(
 	mode => "0755",
     }
 
-    file {"/tmp/puppet/config_client_py/add_domain.py":
-	ensure => file,
-	require => File["/tmp/puppet/config_client_py"],
-	content => template("direct/add_domain.py.erb"),
-    }
-
     exec {"add-domain":
 	cwd => "/tmp/puppet/config_client_py",
-	command => "python add_domain.py",
+	command => "python add_domain.py $direct_domain_name $postmaster",
 	require => [
 		Exec["pip install suds"],	
-		Exec["wait-for-tomcat"],
-		File["/tmp/puppet/config_client_py/add_domain.py"]
+		Exec["wait-for-tomcat"]
 	]
     }
 
@@ -248,17 +243,23 @@ class direct(
 	tries => 30,
 	try_sleep => 5,
 	timeout => 1,
-	require => [
-		Service["direct-james"],
-	]
+	require => Service["direct-james"]
     }
-
 
     file {"/tmp/puppet/add_email_user.expect":
 	ensure => file,
 	source => "puppet:///modules/direct/add_email_user.expect",
     }
- 
+
+}
+
+define trust_bundle($url) {
+  
+    exec {"add-trust-bundle-$name":
+	cwd => "/tmp/puppet/config_client_py",
+	command => "python add_trust_bundle \"$name\" \"$domain\" ",
+	require => Exec["add-domain"]
+    }
 
 }
 

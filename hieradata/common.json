@@ -14,5 +14,12 @@
      "state": "MA",
      "org": "SMART Platforms"
    },
-  "java_home": "/usr/lib/jvm/java-7-openjdk-amd64"
+   "trust_bundles": {
+     "Patient Test Bundle": {
+        "url": "https://secure.bluebuttontrust.org/p7b.ashx?id=4d9daaf9-384a-e211-8bc3-78e3b5114607" 
+     },
+     "Provider Test Bundle": {
+        "url": "https://secure.bluebuttontrust.org/p7b.ashx?id=cb300117-3a4a-e211-8bc3-78e3b5114607"
+     }
+   }
 } 
