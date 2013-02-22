@@ -18,11 +18,11 @@ class TrustBundle(object):
         tb.refreshInterval = self.refresh_interval
         
         existing= client.service.getTrustBundleByName(self.name)
-        if (existing): client.service.deleteTrustBundle(existing.id)
+        if (existing): client.service.deleteTrustBundles(existing.id)
         
-        client.service.addTrustBundle(c)
+        client.service.addTrustBundle(tb)
         bundles = client.service.getTrustBundles()
-        domains = client.listDomains()
+        domains = client.service.listDomains()
         
         for domain, bundle in itertools.product(domains, bundles):
             dass = {}

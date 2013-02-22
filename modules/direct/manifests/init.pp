@@ -64,7 +64,9 @@ class direct_pre($java_home=hiera('java_home')) {
 	backup => puppet
     }	
 
-    file { "$java_home/jre/lib/security/local_policy.jar":
+    #TODO: Add bouncycastle to security.providers 
+    # security.provider.5=org.bouncycastle.jce.provider.BouncyCastleProvider
+
 	require => Package["openjdk-7-jdk"],
         source => "puppet:///modules/direct/UnlimitedJCEPolicy/local_policy.jar",
 	ensure => file,
@@ -257,7 +259,7 @@ define trust_bundle($url) {
   
     exec {"add-trust-bundle-$name":
 	cwd => "/tmp/puppet/config_client_py",
-	command => "python add_trust_bundle \"$name\" \"$domain\" ",
+	command => "python add_trust_bundle.py \"$name\" \"$url\" ",
 	require => Exec["add-domain"]
     }
 
@@ -306,7 +308,7 @@ class certificate(
     }
 
     exec {"add-cert":
-	command => "python add_certificate.py /tmp/puppet/certificate.der",
+	command => "python add_certificate.py /tmp/puppet/cert-with-key-package.p12",
 	cwd => "/tmp/puppet/config_client_py",
 	require => Exec["gen-cert"]
     }

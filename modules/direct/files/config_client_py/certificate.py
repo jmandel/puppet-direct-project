@@ -4,9 +4,14 @@ from datetime import datetime
 class Certificate(object):
 
     def __init__(self, der_location):
-        self.cert = crypto.load_certificate(
-                   crypto.FILETYPE_ASN1, 
-                   open(der_location).read())
+	self.isPrivate = True
+	self.keydata = open(der_location).read()
+
+	try:
+            self.cert = crypto.load_pkcs12(self.keydata, "").get_certificate()
+        except crypto.Error:
+            self.isPrivate = False
+            self.cert = crypto.load_certificate( crypto.FILETYPE_ASN1, self.keydata)
 
     def get_not_before(self):
         return parse_date(self.cert.get_notBefore())
@@ -20,12 +25,12 @@ class Certificate(object):
     def add_to_config(self, client):
         c = client.factory.create("ns0:certificate")
         c.id = 0 # TODO: not sure why but this avoids err.
-        c.data = crypto.dump_certificate(crypto.FILETYPE_ASN1, self.cert).encode("base64")
+        c.data = self.keydata.encode("base64")
         c.owner = self.get_cn()
         c.validEndDate = self.get_not_after() 
         c.validStartDate = self.get_not_before() 
         c.status.value = "ENABLED"
-        c.privateKey = False
+        c.privateKey = self.isPrivate
         client.service.addCertificates(c)
 
 def parse_date(d):
