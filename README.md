@@ -1,11 +1,25 @@
-## Draft: Puppet installer for Direct J-RI
+## Puppet installer for Direct J-RI
 Java Reference Implementation for Direct Project
 
-Targets: Version 2.1 RC1
+## From 0 to Direct Java-RI
+These scripts take a fresh Ubuntu 12.10 machine, and install 
+the Direct Java Reference Implementation 2.1 RC1 with all dependencies.
 
-On a fresh Ubuntu 12.10 machine:
+### Configurable through a [single JSON file](hieradata/common.json)
+ * Certificate Generation
+ * Default e-mail account names + passwords
+ * DNS hostname for MX and A records
+ * Trust Bundles to install
 
-Install Puppet 3.x:
+### Total system configuration
+ * Firewall allows access only to mail servers + ssh
+ * upstart services launch on boot
+
+### Unattended install in the cloud
+
+Just provision an Ubuntu 12.10 stock VM.  Then
+
+*Install Puppet 3.x:*
 ```
 #!/bin/bash
 # upgrade all packages
@@ -25,8 +39,7 @@ apt-get -y install puppet-common git
 export DEBIAN_FRONTEND=dialog
 ```
 
-
-Then apply the site manifest to load Direct J-RI:
+*Apply the site manifest to load Direct J-RI:*
 ```
 $ git clone https://github.com/jmandel/puppet-direct-project.git /etc/puppet
 # (edit /etc/puppet/hieradata/common.json with your settings)
@@ -36,15 +49,15 @@ $ puppet apply  /etc/puppet/manifests/site.pp  -d
 ---
 ### TODO for automated config:
 
-[x] 1.  Within config-service, create new domain w/ postmaster, ENABLED status
-[x] 2.  Create a set of mail users in common.json
-[x] 3.  ...and ensure each one is auto-created via telnet/expect
-[x] 4.  Generate site certificate
-[x] 5.  Generate domain certificate
-[x] 6.  Within config-service, add the domain certificate.
-[x] 7.  Within config-service, create MX  entry for MX
-[x] 7.  Within config-service, create A entry for direct_host
-[x] 8.  Within config-service, add authorized trust bundles to installation
-[x ]9.  Within config-service, add authorized trust bundles to domain
+1. [x]   Within config-service, create new domain w/ postmaster, ENABLED status
+2.  [x] Create a set of mail users in common.json
+3. [x] ...and ensure each one is auto-created via telnet/expect
+4. [x] Generate site certificate
+5. [x] Generate domain certificate
+6. [x] Within config-service, add the domain certificate.
+7. [x] Within config-service, create MX  entry for MX
+7. [x] Within config-service, create A entry for direct_host
+8. [x] Within config-service, add authorized trust bundles to installation
+9. [x]   Within config-service, add authorized trust bundles to domain
 
 * Run `config-service` tomcat as unprivileged user
