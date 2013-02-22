@@ -13,6 +13,7 @@ the Direct Java Reference Implementation 2.1 RC1 with all dependencies.
 
 ### Total system configuration
  * Firewall allows access only to mail servers + ssh
+ * James mail server configured for secure POP3 + SMTP
  * upstart services launch on boot
 
 ### Unattended install in the cloud
