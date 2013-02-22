@@ -37,17 +37,14 @@ $ puppet apply  /etc/puppet/manifests/site.pp  -d
 ### TODO for automated config:
 
 [x] 1.  Within config-service, create new domain w/ postmaster, ENABLED status
-
 [x] 2.  Create a set of mail users in common.json
+[x] 3.  ...and ensure each one is auto-created via telnet/expect
+[x] 4.  Generate site certificate
+[x] 5.  Generate domain certificate
+[x] 6.  Within config-service, add the domain certificate.
+[x] 7.  Within config-service, create MX  entry for MX
+[x] 7.  Within config-service, create A entry for direct_host
+[x] 8.  Within config-service, add authorized trust bundles to installation
+[x ]9.  Within config-service, add authorized trust bundles to domain
 
-[x] ... and ensure each one is auto-created via telnet/expect
-
-[x] 3.  Generate site certificate
-[x] 4.  Generate domain certificate
-[x] 5.  Within config-service, add the domain certificate.
-
-6.  Within config-service, create MX  entry for MX
-7.  Within config-service, create A entry for direct_host
-8.  Within config-service, add authorized trust bundles to installation
-9.  Within config-service, add authorized trust bundles to domain
-
+* Run `config-service` tomcat as unprivileged user
