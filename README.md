@@ -2,8 +2,9 @@
 Java Reference Implementation for Direct Project
 
 ## From 0 to Direct Java-RI
-These scripts take a fresh Ubuntu 12.10 machine, and install 
-the Direct Java Reference Implementation 2.1 RC1 with all dependencies.
+These scripts install the Direct [Java Reference Implementation]
+(http://wiki.directproject.org/Reference+Implementation+Workgroup)
+RC 2.1 on a fresh Ubuntu 12.10 machine.
 
 ### Configurable through a [single JSON file](hieradata/common.json)
  * Certificate Generation
