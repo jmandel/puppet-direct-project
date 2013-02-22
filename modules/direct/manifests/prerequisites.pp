@@ -16,15 +16,18 @@ class direct::prerequisites($java_home=hiera('java_home')) {
     include ufw
 
     exec {"pip install suds": 
-	unless => "pip freeze | grep suds=="
+	unless => "pip freeze | grep suds==",
+	require => Package["python-pip"]
     }
 
     exec {"pip install pyopenssl": 
-	unless => "pip freeze | grep pyopenssl=="
+	unless => "pip freeze | grep pyopenssl==",
+	require => Package["python-pip"]
     }
 
     exec {"pip install dnspython": 
-	unless => "pip freeze | grep dnspython=="
+	unless => "pip freeze | grep dnspython==",
+	require => Package["python-pip"]
     }
 
     ufw::allow { "allow-ssh-from-all":
