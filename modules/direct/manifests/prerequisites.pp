@@ -3,6 +3,7 @@ class direct::prerequisites($java_home=hiera('java_home')) {
     package {
         ["ant",
 	 "unzip", 
+         "expect",
 	 "openjdk-7-jdk",
 	 "nmap", 
 	 "python-pip",
