@@ -1,3 +1,11 @@
+# This project has migrated to: https://github.com/jmandel/ansible-ccda
+You should use the new repository, not this one.
+
+
+# Old documentation
+---
+
+
 ## Puppet installer for Direct J-RI
 Java Reference Implementation for Direct Project
 
